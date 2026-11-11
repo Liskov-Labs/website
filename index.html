@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Liskov Labs</title>
+  <meta name="description" content="Liskov Labs LLP builds software with AI.">
+  <meta name="theme-color" content="#006738">
+
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <link rel="canonical" href="https://liskovlabs.com/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://liskovlabs.com/">
+  <meta property="og:title" content="Liskov Labs">
+  <meta property="og:description" content="Building software with AI.">
+  <meta property="og:image" content="https://liskovlabs.com/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --ink: #0f1f17;
+      --muted: #5b6b62;
+      --brand-dark: #006738;
+      --brand: #3ab549;
+      /* Logo is designed for a white background, so the page stays light. */
+      color-scheme: light;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    /* Shader background: hidden until the first frame renders, so the
+       plain --bg colour shows whenever WebGL isn't available. */
+    #bg {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+    #bg.ready { opacity: 1; }
+
+    main, footer {
+      position: relative;
+      z-index: 1;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 16px 24px;
+    }
+
+    /* Frosted-glass card: the animated background stays visible (blurred)
+       behind the content while the logo and copy stay crisp. */
+    .card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      max-width: 480px;
+      padding: clamp(36px, 7vw, 56px) clamp(24px, 6vw, 56px);
+      border-radius: 32px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 1px 2px rgba(0, 60, 30, 0.06),
+        0 30px 80px -24px rgba(0, 72, 38, 0.35);
+      animation: rise 1s cubic-bezier(.2, .7, .2, 1) both;
+    }
+    @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+      .card {
+        background: rgba(255, 255, 255, 0.55);
+        -webkit-backdrop-filter: blur(28px) saturate(160%);
+        backdrop-filter: blur(28px) saturate(160%);
+      }
+    }
+
+    .logo {
+      width: clamp(110px, 26vw, 168px);
+      height: auto;
+      filter: drop-shadow(0 12px 24px rgba(0, 103, 56, 0.18));
+      animation: float 6s ease-in-out 1s infinite;
+    }
+
+    h1 {
+      margin: 28px 0 0;
+      font-size: clamp(2rem, 6vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.1;
+      color: var(--brand-dark);
+      background: linear-gradient(120deg, #00562f 0%, #006738 35%, #3ab549 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rise 1s 120ms cubic-bezier(.2, .7, .2, 1) both;
+    }
+
+    .tagline {
+      margin: 14px 0 0;
+      max-width: 30ch;
+      font-size: clamp(1rem, 2.6vw, 1.125rem);
+      line-height: 1.55;
+      color: #3d5247;
+      animation: rise 1s 220ms cubic-bezier(.2, .7, .2, 1) both;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 28px 0 0;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(0, 103, 56, 0.12);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--brand-dark);
+      animation: rise 1s 320ms cubic-bezier(.2, .7, .2, 1) both;
+    }
+
+    .status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--brand);
+      box-shadow: 0 0 0 0 rgba(58, 181, 73, .5);
+      animation: pulse 2.4s ease-out infinite;
+    }
+
+    footer {
+      padding: 20px 16px 24px;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #1f3a2b;
+      text-shadow: 0 1px 8px rgba(255, 255, 255, 0.8);
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(58, 181, 73, .5); }
+      70%  { box-shadow: 0 0 0 10px rgba(58, 181, 73, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(58, 181, 73, 0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg" aria-hidden="true"></canvas>
+  <main>
+    <section class="card">
+      <img class="logo" src="assets/logo.png" width="512" height="512" alt="Liskov Labs logo">
+      <h1>Liskov Labs</h1>
+      <p class="tagline">Building software with AI&nbsp;&mdash; from idea to generated, working code.</p>
+      <p class="status">In stealth</p>
+    </section>
+  </main>
+  <footer>
+    &copy; <span id="year">2026</span> Liskov Labs LLP
+  </footer>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script src="assets/shader-bg.js" defer></script>
+</body>
+</html>
