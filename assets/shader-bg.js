@@ -194,6 +194,41 @@
     }
   }
 
+  // Browser chrome tinting. iOS Safari tints the status bar / toolbar from
+  // the page background colour (and older versions + Android Chrome from
+  // <meta name="theme-color">) — neither can see canvas pixels. So sample
+  // the shader's top edge and mirror it into both. Must run right after
+  // drawArrays, before the frame is presented, since the drawing buffer
+  // isn't preserved.
+  var themeMeta = document.querySelector('meta[name="theme-color"]');
+  var originalTheme = themeMeta ? themeMeta.getAttribute("content") : null;
+  var lastSample = -Infinity;
+  var lastColor = "";
+  var row = null;
+
+  function sampleEdgeColor(now) {
+    if (now - lastSample < 500) return;
+    lastSample = now;
+    var w = canvas.width;
+    if (!row || row.length !== w * 4) row = new Uint8Array(w * 4);
+    gl.readPixels(0, canvas.height - 1, w, 1, gl.RGBA, gl.UNSIGNED_BYTE, row);
+    var r = 0, g = 0, b = 0;
+    for (var i = 0; i < row.length; i += 4) {
+      r += row[i]; g += row[i + 1]; b += row[i + 2];
+    }
+    var color = "rgb(" + Math.round(r / w) + "," + Math.round(g / w) + "," + Math.round(b / w) + ")";
+    if (color === lastColor) return;
+    lastColor = color;
+    document.body.style.backgroundColor = color;
+    if (themeMeta) themeMeta.setAttribute("content", color);
+  }
+
+  function resetEdgeColor() {
+    document.body.style.backgroundColor = "";
+    if (themeMeta && originalTheme) themeMeta.setAttribute("content", originalTheme);
+    lastColor = "";
+  }
+
   function onPointer(e) {
     var w = window.innerWidth, h = window.innerHeight, m = Math.min(w, h);
     target = { x: (e.clientX - w / 2) / m, y: (h / 2 - e.clientY) / m };
@@ -216,6 +251,7 @@
     gl.uniform1f(uTime, t);
     gl.uniform2f(uMouse, mouse.x, mouse.y);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+    sampleEdgeColor(now);
   }
 
   function frame(now) {
@@ -238,13 +274,17 @@
     lost = true;
     pause();
     canvas.classList.remove("ready");
+    resetEdgeColor();
   });
 
   window.addEventListener("pointermove", onPointer, { passive: true });
   window.addEventListener("pointerdown", onPointer, { passive: true });
 
   window.addEventListener("resize", function () {
-    if (reduceMotion) draw(start);
+    if (reduceMotion) {
+      lastSample = -Infinity;
+      draw(start);
+    }
   });
 
   document.addEventListener("visibilitychange", function () {
